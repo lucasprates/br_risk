@@ -4,6 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "node apps/server/src/server.mjs",
+    "dev": "node apps/server/src/server.mjs",
     "validate:ruleset": "node scripts/validate-ruleset.mjs"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3"
   }
 }

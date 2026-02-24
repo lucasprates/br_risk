@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BRisk</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>BRisk</h1>
+          <p>Classic WAR-inspired online strategy board (human multiplayer).</p>
+        </div>
+
+        <form id="join-form" class="join-form">
+          <label>
+            Name
+            <input id="player-name" maxlength="24" required placeholder="Your name" />
+          </label>
+          <label>
+            Room
+            <input id="room-id" maxlength="12" required placeholder="BRISK01" />
+          </label>
+          <button id="join-button" type="submit">Join Room</button>
+          <button id="start-button" type="button" class="secondary" disabled>Start Game</button>
+        </form>
+      </header>
+
+      <p id="status-line" class="status-line">Load complete. Join or create a room to begin.</p>
+
+      <main class="main-grid">
+        <section class="board-section">
+          <svg id="board" viewBox="0 0 1800 980" aria-label="BRisk board"></svg>
+        </section>
+
+        <aside class="sidebar">
+          <section class="panel">
+            <h2>Turn</h2>
+            <p id="turn-summary">Waiting for lobby.</p>
+            <p id="objective-text" class="objective">Objective: hidden until game starts.</p>
+          </section>
+
+          <section class="panel">
+            <h2>Actions</h2>
+            <p id="selection-summary">Select territories to act.</p>
+            <div class="control-row">
+              <label>
+                Attack Dice
+                <select id="attack-dice">
+                  <option value="1">1</option>
+                  <option value="2" selected>2</option>
+                  <option value="3">3</option>
+                </select>
+              </label>
+              <button id="attack-button" type="button" disabled>Attack</button>
+            </div>
+            <div class="control-row">
+              <label>
+                Fortify Armies
+                <input id="fortify-armies" type="number" min="1" value="1" />
+              </label>
+              <button id="fortify-button" type="button" disabled>Fortify</button>
+            </div>
+            <div class="control-row buttons-only">
+              <button id="end-attack-button" type="button" class="secondary" disabled>End Attack</button>
+              <button id="end-turn-button" type="button" class="secondary" disabled>End Turn</button>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Players</h2>
+            <ul id="players-list" class="players-list"></ul>
+          </section>
+
+          <section class="panel logs">
+            <h2>Battle Log</h2>
+            <ul id="log-list" class="log-list"></ul>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
