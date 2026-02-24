@@ -1,0 +1,67 @@
+{
+  "rulesetId": "war-classic-02000",
+  "gameName": "BRisk",
+  "edition": "WAR classico (Grow 02000)",
+  "players": {
+    "min": 3,
+    "max": 6,
+    "startingArmiesByPlayerCount": {
+      "3": 35,
+      "4": 30,
+      "5": 25,
+      "6": 20
+    }
+  },
+  "turn": {
+    "phases": [
+      "REINFORCE",
+      "ATTACK",
+      "FORTIFY",
+      "END_TURN"
+    ],
+    "drawTerritoryCardIfConqueredAtLeastOne": true
+  },
+  "reinforcement": {
+    "baseFormula": "max(3, floor(territoriesOwned / 2))",
+    "continentBonus": {
+      "AMERICA_DO_NORTE": 5,
+      "AMERICA_DO_SUL": 2,
+      "EUROPA": 5,
+      "AFRICA": 3,
+      "ASIA": 7,
+      "OCEANIA": 2
+    }
+  },
+  "combat": {
+    "attackDiceMax": 3,
+    "defenseDiceMax": 3,
+    "defenseWinsTies": true
+  },
+  "territoryCards": {
+    "total": 44,
+    "territoryCards": 42,
+    "jokers": 2,
+    "symbols": [
+      "CIRCULO",
+      "TRIANGULO",
+      "QUADRADO"
+    ],
+    "validTradeSets": [
+      "THREE_SAME_SYMBOL",
+      "THREE_DIFFERENT_SYMBOLS"
+    ],
+    "tradeValue": {
+      "values": [
+        4,
+        6,
+        8,
+        10,
+        12
+      ],
+      "afterEnd": {
+        "mode": "INCREMENT",
+        "step": 2
+      }
+    }
+  }
+}

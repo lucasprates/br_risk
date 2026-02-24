@@ -1,0 +1,147 @@
+{
+  "rulesetId": "war-classic-02000",
+  "objectives": [
+    {
+      "id": "OBJ_01",
+      "textPt": "Conquistar na totalidade a Asia e a America do Sul.",
+      "textEn": "Conquer all of Asia and South America.",
+      "predicate": {
+        "kind": "CONTROL_CONTINENTS",
+        "continentIds": ["ASIA", "AMERICA_DO_SUL"]
+      }
+    },
+    {
+      "id": "OBJ_02",
+      "textPt": "Conquistar na totalidade a Europa, a Oceania e mais um terceiro.",
+      "textEn": "Conquer all of Europe, Oceania, and one additional continent.",
+      "predicate": {
+        "kind": "CONTROL_CONTINENTS_PLUS_ANY",
+        "required": ["EUROPA", "OCEANIA"],
+        "additionalCount": 1
+      }
+    },
+    {
+      "id": "OBJ_03",
+      "textPt": "Conquistar na totalidade a Europa, a America do Sul e mais um terceiro.",
+      "textEn": "Conquer all of Europe, South America, and one additional continent.",
+      "predicate": {
+        "kind": "CONTROL_CONTINENTS_PLUS_ANY",
+        "required": ["EUROPA", "AMERICA_DO_SUL"],
+        "additionalCount": 1
+      }
+    },
+    {
+      "id": "OBJ_04",
+      "textPt": "Conquistar 18 territorios e ocupar cada um deles com pelo menos dois exercitos.",
+      "textEn": "Conquer 18 territories and occupy each with at least two armies.",
+      "predicate": {
+        "kind": "CONTROL_TERRITORIES",
+        "count": 18,
+        "minArmiesEach": 2
+      }
+    },
+    {
+      "id": "OBJ_05",
+      "textPt": "Conquistar na totalidade a Asia e a Africa.",
+      "textEn": "Conquer all of Asia and Africa.",
+      "predicate": {
+        "kind": "CONTROL_CONTINENTS",
+        "continentIds": ["ASIA", "AFRICA"]
+      }
+    },
+    {
+      "id": "OBJ_06",
+      "textPt": "Conquistar na totalidade a America do Norte e a Africa.",
+      "textEn": "Conquer all of North America and Africa.",
+      "predicate": {
+        "kind": "CONTROL_CONTINENTS",
+        "continentIds": ["AMERICA_DO_NORTE", "AFRICA"]
+      }
+    },
+    {
+      "id": "OBJ_07",
+      "textPt": "Conquistar 24 territorios a sua escolha.",
+      "textEn": "Conquer any 24 territories.",
+      "predicate": {
+        "kind": "CONTROL_TERRITORIES",
+        "count": 24,
+        "minArmiesEach": 1
+      }
+    },
+    {
+      "id": "OBJ_08",
+      "textPt": "Conquistar na totalidade a America do Norte e a Oceania.",
+      "textEn": "Conquer all of North America and Oceania.",
+      "predicate": {
+        "kind": "CONTROL_CONTINENTS",
+        "continentIds": ["AMERICA_DO_NORTE", "OCEANIA"]
+      }
+    },
+    {
+      "id": "OBJ_09",
+      "textPt": "Destruir totalmente os exercitos azuis.",
+      "textEn": "Destroy all blue armies.",
+      "predicate": {
+        "kind": "ELIMINATE_COLOR",
+        "color": "BLUE",
+        "fallbackObjectiveId": "OBJ_07",
+        "selfTargetHandling": "REDRAW_OBJECTIVE"
+      }
+    },
+    {
+      "id": "OBJ_10",
+      "textPt": "Destruir totalmente os exercitos amarelos.",
+      "textEn": "Destroy all yellow armies.",
+      "predicate": {
+        "kind": "ELIMINATE_COLOR",
+        "color": "YELLOW",
+        "fallbackObjectiveId": "OBJ_07",
+        "selfTargetHandling": "REDRAW_OBJECTIVE"
+      }
+    },
+    {
+      "id": "OBJ_11",
+      "textPt": "Destruir totalmente os exercitos vermelhos.",
+      "textEn": "Destroy all red armies.",
+      "predicate": {
+        "kind": "ELIMINATE_COLOR",
+        "color": "RED",
+        "fallbackObjectiveId": "OBJ_07",
+        "selfTargetHandling": "REDRAW_OBJECTIVE"
+      }
+    },
+    {
+      "id": "OBJ_12",
+      "textPt": "Destruir totalmente os exercitos pretos.",
+      "textEn": "Destroy all black armies.",
+      "predicate": {
+        "kind": "ELIMINATE_COLOR",
+        "color": "BLACK",
+        "fallbackObjectiveId": "OBJ_07",
+        "selfTargetHandling": "REDRAW_OBJECTIVE"
+      }
+    },
+    {
+      "id": "OBJ_13",
+      "textPt": "Destruir totalmente os exercitos brancos.",
+      "textEn": "Destroy all white armies.",
+      "predicate": {
+        "kind": "ELIMINATE_COLOR",
+        "color": "WHITE",
+        "fallbackObjectiveId": "OBJ_07",
+        "selfTargetHandling": "REDRAW_OBJECTIVE"
+      }
+    },
+    {
+      "id": "OBJ_14",
+      "textPt": "Destruir totalmente os exercitos verdes.",
+      "textEn": "Destroy all green armies.",
+      "predicate": {
+        "kind": "ELIMINATE_COLOR",
+        "color": "GREEN",
+        "fallbackObjectiveId": "OBJ_07",
+        "selfTargetHandling": "REDRAW_OBJECTIVE"
+      }
+    }
+  ]
+}

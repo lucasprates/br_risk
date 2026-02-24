@@ -1,0 +1,645 @@
+{
+  "rulesetId": "war-classic-02000",
+  "continents": [
+    {
+      "id": "AMERICA_DO_NORTE",
+      "namePt": "America do Norte",
+      "nameEn": "North America",
+      "bonus": 5,
+      "territoryIds": [
+        "ALASKA",
+        "MACKENZIE",
+        "VANCOUVER",
+        "OTTAWA",
+        "LABRADOR",
+        "GROENLANDIA",
+        "NOVA_YORK",
+        "CALIFORNIA",
+        "MEXICO"
+      ]
+    },
+    {
+      "id": "AMERICA_DO_SUL",
+      "namePt": "America do Sul",
+      "nameEn": "South America",
+      "bonus": 2,
+      "territoryIds": [
+        "VENEZUELA",
+        "BRASIL",
+        "BOLIVIA",
+        "ARGENTINA"
+      ]
+    },
+    {
+      "id": "EUROPA",
+      "namePt": "Europa",
+      "nameEn": "Europe",
+      "bonus": 5,
+      "territoryIds": [
+        "ISLANDIA",
+        "INGLATERRA",
+        "SUECIA",
+        "ALEMANHA",
+        "POLONIA",
+        "FRANCA",
+        "MOSCOU"
+      ]
+    },
+    {
+      "id": "AFRICA",
+      "namePt": "Africa",
+      "nameEn": "Africa",
+      "bonus": 3,
+      "territoryIds": [
+        "ARGELIA",
+        "EGITO",
+        "SUDAO",
+        "CONGO",
+        "MADAGASCAR",
+        "AFRICA_DO_SUL"
+      ]
+    },
+    {
+      "id": "ASIA",
+      "namePt": "Asia",
+      "nameEn": "Asia",
+      "bonus": 7,
+      "territoryIds": [
+        "ORIENTE_MEDIO",
+        "ARAL",
+        "OMSK",
+        "DUDINKA",
+        "SIBERIA",
+        "TCHITA",
+        "MONGOLIA",
+        "CHINA",
+        "INDIA",
+        "VIETNA",
+        "JAPAO",
+        "VLADIVOSTOK"
+      ]
+    },
+    {
+      "id": "OCEANIA",
+      "namePt": "Oceania",
+      "nameEn": "Oceania",
+      "bonus": 2,
+      "territoryIds": [
+        "BORNEO",
+        "SUMATRA",
+        "NOVA_GUINE",
+        "AUSTRALIA"
+      ]
+    }
+  ],
+  "territories": [
+    {
+      "id": "ALASKA",
+      "namePt": "Alaska",
+      "nameEn": "Alaska",
+      "continentId": "AMERICA_DO_NORTE",
+      "cardSymbol": "CIRCULO",
+      "neighbors": [
+        "MACKENZIE",
+        "VANCOUVER",
+        "VLADIVOSTOK"
+      ]
+    },
+    {
+      "id": "MACKENZIE",
+      "namePt": "Mackenzie",
+      "nameEn": "Mackenzie",
+      "continentId": "AMERICA_DO_NORTE",
+      "cardSymbol": "TRIANGULO",
+      "neighbors": [
+        "ALASKA",
+        "VANCOUVER",
+        "OTTAWA",
+        "GROENLANDIA"
+      ]
+    },
+    {
+      "id": "VANCOUVER",
+      "namePt": "Vancouver",
+      "nameEn": "Vancouver",
+      "continentId": "AMERICA_DO_NORTE",
+      "cardSymbol": "QUADRADO",
+      "neighbors": [
+        "ALASKA",
+        "MACKENZIE",
+        "OTTAWA",
+        "CALIFORNIA"
+      ]
+    },
+    {
+      "id": "OTTAWA",
+      "namePt": "Ottawa",
+      "nameEn": "Ottawa",
+      "continentId": "AMERICA_DO_NORTE",
+      "cardSymbol": "CIRCULO",
+      "neighbors": [
+        "MACKENZIE",
+        "VANCOUVER",
+        "LABRADOR",
+        "NOVA_YORK",
+        "CALIFORNIA",
+        "GROENLANDIA"
+      ]
+    },
+    {
+      "id": "LABRADOR",
+      "namePt": "Labrador",
+      "nameEn": "Labrador",
+      "continentId": "AMERICA_DO_NORTE",
+      "cardSymbol": "TRIANGULO",
+      "neighbors": [
+        "OTTAWA",
+        "GROENLANDIA",
+        "NOVA_YORK"
+      ]
+    },
+    {
+      "id": "GROENLANDIA",
+      "namePt": "Groenlandia",
+      "nameEn": "Greenland",
+      "continentId": "AMERICA_DO_NORTE",
+      "cardSymbol": "QUADRADO",
+      "neighbors": [
+        "MACKENZIE",
+        "OTTAWA",
+        "LABRADOR",
+        "ISLANDIA"
+      ]
+    },
+    {
+      "id": "NOVA_YORK",
+      "namePt": "Nova York",
+      "nameEn": "New York",
+      "continentId": "AMERICA_DO_NORTE",
+      "cardSymbol": "QUADRADO",
+      "neighbors": [
+        "OTTAWA",
+        "LABRADOR",
+        "CALIFORNIA",
+        "MEXICO"
+      ]
+    },
+    {
+      "id": "CALIFORNIA",
+      "namePt": "California",
+      "nameEn": "California",
+      "continentId": "AMERICA_DO_NORTE",
+      "cardSymbol": "CIRCULO",
+      "neighbors": [
+        "VANCOUVER",
+        "OTTAWA",
+        "NOVA_YORK",
+        "MEXICO"
+      ]
+    },
+    {
+      "id": "MEXICO",
+      "namePt": "Mexico",
+      "nameEn": "Mexico",
+      "continentId": "AMERICA_DO_NORTE",
+      "cardSymbol": "TRIANGULO",
+      "neighbors": [
+        "CALIFORNIA",
+        "NOVA_YORK",
+        "VENEZUELA"
+      ]
+    },
+    {
+      "id": "VENEZUELA",
+      "namePt": "Venezuela",
+      "nameEn": "Venezuela",
+      "continentId": "AMERICA_DO_SUL",
+      "cardSymbol": "CIRCULO",
+      "neighbors": [
+        "MEXICO",
+        "BRASIL",
+        "BOLIVIA"
+      ]
+    },
+    {
+      "id": "BRASIL",
+      "namePt": "Brasil",
+      "nameEn": "Brazil",
+      "continentId": "AMERICA_DO_SUL",
+      "cardSymbol": "TRIANGULO",
+      "neighbors": [
+        "VENEZUELA",
+        "BOLIVIA",
+        "ARGENTINA",
+        "ARGELIA"
+      ]
+    },
+    {
+      "id": "BOLIVIA",
+      "namePt": "Bolivia",
+      "nameEn": "Bolivia",
+      "continentId": "AMERICA_DO_SUL",
+      "cardSymbol": "QUADRADO",
+      "neighbors": [
+        "VENEZUELA",
+        "BRASIL",
+        "ARGENTINA"
+      ]
+    },
+    {
+      "id": "ARGENTINA",
+      "namePt": "Argentina",
+      "nameEn": "Argentina",
+      "continentId": "AMERICA_DO_SUL",
+      "cardSymbol": "CIRCULO",
+      "neighbors": [
+        "BOLIVIA",
+        "BRASIL"
+      ]
+    },
+    {
+      "id": "ISLANDIA",
+      "namePt": "Islandia",
+      "nameEn": "Iceland",
+      "continentId": "EUROPA",
+      "cardSymbol": "QUADRADO",
+      "neighbors": [
+        "GROENLANDIA",
+        "INGLATERRA",
+        "SUECIA"
+      ]
+    },
+    {
+      "id": "INGLATERRA",
+      "namePt": "Inglaterra",
+      "nameEn": "England",
+      "continentId": "EUROPA",
+      "cardSymbol": "QUADRADO",
+      "neighbors": [
+        "ISLANDIA",
+        "SUECIA",
+        "ALEMANHA",
+        "FRANCA"
+      ]
+    },
+    {
+      "id": "SUECIA",
+      "namePt": "Suecia",
+      "nameEn": "Sweden",
+      "continentId": "EUROPA",
+      "cardSymbol": "CIRCULO",
+      "neighbors": [
+        "ISLANDIA",
+        "INGLATERRA",
+        "ALEMANHA",
+        "MOSCOU"
+      ]
+    },
+    {
+      "id": "ALEMANHA",
+      "namePt": "Alemanha",
+      "nameEn": "Germany",
+      "continentId": "EUROPA",
+      "cardSymbol": "TRIANGULO",
+      "neighbors": [
+        "INGLATERRA",
+        "SUECIA",
+        "MOSCOU",
+        "POLONIA",
+        "FRANCA"
+      ]
+    },
+    {
+      "id": "POLONIA",
+      "namePt": "Polonia",
+      "nameEn": "Poland",
+      "continentId": "EUROPA",
+      "cardSymbol": "CIRCULO",
+      "neighbors": [
+        "ALEMANHA",
+        "MOSCOU",
+        "ORIENTE_MEDIO",
+        "EGITO",
+        "ARGELIA",
+        "FRANCA"
+      ]
+    },
+    {
+      "id": "FRANCA",
+      "namePt": "Franca",
+      "nameEn": "France",
+      "continentId": "EUROPA",
+      "cardSymbol": "TRIANGULO",
+      "neighbors": [
+        "INGLATERRA",
+        "ALEMANHA",
+        "POLONIA",
+        "ARGELIA"
+      ]
+    },
+    {
+      "id": "MOSCOU",
+      "namePt": "Moscou",
+      "nameEn": "Moscow",
+      "continentId": "EUROPA",
+      "cardSymbol": "QUADRADO",
+      "neighbors": [
+        "SUECIA",
+        "ALEMANHA",
+        "POLONIA",
+        "ORIENTE_MEDIO",
+        "ARAL",
+        "OMSK"
+      ]
+    },
+    {
+      "id": "ARGELIA",
+      "namePt": "Argelia",
+      "nameEn": "Algeria",
+      "continentId": "AFRICA",
+      "cardSymbol": "QUADRADO",
+      "neighbors": [
+        "BRASIL",
+        "EGITO",
+        "CONGO",
+        "FRANCA",
+        "POLONIA"
+      ]
+    },
+    {
+      "id": "EGITO",
+      "namePt": "Egito",
+      "nameEn": "Egypt",
+      "continentId": "AFRICA",
+      "cardSymbol": "TRIANGULO",
+      "neighbors": [
+        "POLONIA",
+        "ORIENTE_MEDIO",
+        "SUDAO",
+        "CONGO",
+        "ARGELIA"
+      ]
+    },
+    {
+      "id": "SUDAO",
+      "namePt": "Sudao",
+      "nameEn": "Sudan",
+      "continentId": "AFRICA",
+      "cardSymbol": "CIRCULO",
+      "neighbors": [
+        "EGITO",
+        "ORIENTE_MEDIO",
+        "MADAGASCAR",
+        "AFRICA_DO_SUL",
+        "CONGO"
+      ]
+    },
+    {
+      "id": "CONGO",
+      "namePt": "Congo",
+      "nameEn": "Congo",
+      "continentId": "AFRICA",
+      "cardSymbol": "QUADRADO",
+      "neighbors": [
+        "ARGELIA",
+        "EGITO",
+        "SUDAO",
+        "AFRICA_DO_SUL"
+      ]
+    },
+    {
+      "id": "MADAGASCAR",
+      "namePt": "Madagascar",
+      "nameEn": "Madagascar",
+      "continentId": "AFRICA",
+      "cardSymbol": "TRIANGULO",
+      "neighbors": [
+        "SUDAO",
+        "AFRICA_DO_SUL"
+      ]
+    },
+    {
+      "id": "AFRICA_DO_SUL",
+      "namePt": "Africa do Sul",
+      "nameEn": "South Africa",
+      "continentId": "AFRICA",
+      "cardSymbol": "CIRCULO",
+      "neighbors": [
+        "CONGO",
+        "SUDAO",
+        "MADAGASCAR"
+      ]
+    },
+    {
+      "id": "ORIENTE_MEDIO",
+      "namePt": "Oriente Medio",
+      "nameEn": "Middle East",
+      "continentId": "ASIA",
+      "cardSymbol": "QUADRADO",
+      "neighbors": [
+        "EGITO",
+        "POLONIA",
+        "MOSCOU",
+        "ARAL",
+        "INDIA",
+        "SUDAO"
+      ]
+    },
+    {
+      "id": "ARAL",
+      "namePt": "Aral",
+      "nameEn": "Aral",
+      "continentId": "ASIA",
+      "cardSymbol": "CIRCULO",
+      "neighbors": [
+        "ORIENTE_MEDIO",
+        "MOSCOU",
+        "OMSK",
+        "CHINA",
+        "INDIA"
+      ]
+    },
+    {
+      "id": "OMSK",
+      "namePt": "Omsk",
+      "nameEn": "Omsk",
+      "continentId": "ASIA",
+      "cardSymbol": "TRIANGULO",
+      "neighbors": [
+        "MOSCOU",
+        "ARAL",
+        "DUDINKA",
+        "SIBERIA",
+        "CHINA"
+      ]
+    },
+    {
+      "id": "DUDINKA",
+      "namePt": "Dudinka",
+      "nameEn": "Dudinka",
+      "continentId": "ASIA",
+      "cardSymbol": "QUADRADO",
+      "neighbors": [
+        "OMSK",
+        "SIBERIA",
+        "TCHITA"
+      ]
+    },
+    {
+      "id": "SIBERIA",
+      "namePt": "Siberia",
+      "nameEn": "Siberia",
+      "continentId": "ASIA",
+      "cardSymbol": "CIRCULO",
+      "neighbors": [
+        "OMSK",
+        "DUDINKA",
+        "TCHITA",
+        "MONGOLIA"
+      ]
+    },
+    {
+      "id": "TCHITA",
+      "namePt": "Tchita",
+      "nameEn": "Chita",
+      "continentId": "ASIA",
+      "cardSymbol": "QUADRADO",
+      "neighbors": [
+        "DUDINKA",
+        "SIBERIA",
+        "MONGOLIA",
+        "CHINA",
+        "VIETNA",
+        "VLADIVOSTOK"
+      ]
+    },
+    {
+      "id": "MONGOLIA",
+      "namePt": "Mongolia",
+      "nameEn": "Mongolia",
+      "continentId": "ASIA",
+      "cardSymbol": "TRIANGULO",
+      "neighbors": [
+        "SIBERIA",
+        "TCHITA",
+        "CHINA",
+        "JAPAO",
+        "VLADIVOSTOK"
+      ]
+    },
+    {
+      "id": "CHINA",
+      "namePt": "China",
+      "nameEn": "China",
+      "continentId": "ASIA",
+      "cardSymbol": "TRIANGULO",
+      "neighbors": [
+        "ARAL",
+        "OMSK",
+        "MONGOLIA",
+        "TCHITA",
+        "VIETNA",
+        "INDIA"
+      ]
+    },
+    {
+      "id": "INDIA",
+      "namePt": "India",
+      "nameEn": "India",
+      "continentId": "ASIA",
+      "cardSymbol": "CIRCULO",
+      "neighbors": [
+        "ORIENTE_MEDIO",
+        "ARAL",
+        "CHINA",
+        "VIETNA"
+      ]
+    },
+    {
+      "id": "VIETNA",
+      "namePt": "Vietna",
+      "nameEn": "Vietnam",
+      "continentId": "ASIA",
+      "cardSymbol": "TRIANGULO",
+      "neighbors": [
+        "INDIA",
+        "CHINA",
+        "TCHITA",
+        "BORNEO"
+      ]
+    },
+    {
+      "id": "JAPAO",
+      "namePt": "Japao",
+      "nameEn": "Japan",
+      "continentId": "ASIA",
+      "cardSymbol": "CIRCULO",
+      "neighbors": [
+        "MONGOLIA",
+        "VLADIVOSTOK"
+      ]
+    },
+    {
+      "id": "VLADIVOSTOK",
+      "namePt": "Vladivostok",
+      "nameEn": "Vladivostok",
+      "continentId": "ASIA",
+      "cardSymbol": "CIRCULO",
+      "neighbors": [
+        "JAPAO",
+        "TCHITA",
+        "MONGOLIA",
+        "ALASKA"
+      ]
+    },
+    {
+      "id": "BORNEO",
+      "namePt": "Borneo",
+      "nameEn": "Borneo",
+      "continentId": "OCEANIA",
+      "cardSymbol": "TRIANGULO",
+      "neighbors": [
+        "SUMATRA",
+        "NOVA_GUINE",
+        "AUSTRALIA",
+        "VIETNA"
+      ]
+    },
+    {
+      "id": "SUMATRA",
+      "namePt": "Sumatra",
+      "nameEn": "Sumatra",
+      "continentId": "OCEANIA",
+      "cardSymbol": "CIRCULO",
+      "neighbors": [
+        "BORNEO",
+        "NOVA_GUINE",
+        "AUSTRALIA"
+      ]
+    },
+    {
+      "id": "NOVA_GUINE",
+      "namePt": "Nova Guine",
+      "nameEn": "New Guinea",
+      "continentId": "OCEANIA",
+      "cardSymbol": "QUADRADO",
+      "neighbors": [
+        "BORNEO",
+        "SUMATRA",
+        "AUSTRALIA"
+      ]
+    },
+    {
+      "id": "AUSTRALIA",
+      "namePt": "Australia",
+      "nameEn": "Australia",
+      "continentId": "OCEANIA",
+      "cardSymbol": "TRIANGULO",
+      "neighbors": [
+        "BORNEO",
+        "SUMATRA",
+        "NOVA_GUINE"
+      ]
+    }
+  ]
+}
