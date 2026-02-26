@@ -68,6 +68,28 @@ const TERRITORY_LAYOUT = {
   AUSTRALIA: { x: 1455, y: 805, rx: 78, ry: 46, shortName: 'Australia' }
 };
 
+function parseAutoJoinConfig() {
+  const params = new URLSearchParams(window.location.search);
+  const autoJoin = params.get('autoJoin') === '1';
+  if (!autoJoin) {
+    return null;
+  }
+
+  const playerName = (params.get('playerName') ?? '').trim();
+  const roomId = (params.get('roomId') ?? '').trim().toUpperCase();
+
+  if (!playerName || !roomId) {
+    return null;
+  }
+
+  return {
+    playerName,
+    roomId,
+    isPublic: params.get('publicRoom') === '1',
+    autoHostStart: params.get('autoHostStart') === '1'
+  };
+}
+
 const state = {
   socket: null,
   snapshot: null,
@@ -83,15 +105,22 @@ const state = {
   },
   lastPhase: null,
   statusMessage: 'Connect to a room to start.',
-  statusTone: 'info'
+  statusTone: 'info',
+  publicRooms: [],
+  autoJoinConfig: parseAutoJoinConfig(),
+  autoJoinAttempted: false,
+  autoHostStartTriggered: false
 };
 
 const ui = {
   joinForm: document.getElementById('join-form'),
   playerNameInput: document.getElementById('player-name'),
   roomIdInput: document.getElementById('room-id'),
+  roomPublicInput: document.getElementById('room-public'),
   joinButton: document.getElementById('join-button'),
   startButton: document.getElementById('start-button'),
+  publicRoomsList: document.getElementById('public-rooms-list'),
+  roomsRefreshButton: document.getElementById('rooms-refresh-button'),
   statusLine: document.getElementById('status-line'),
   board: document.getElementById('board'),
   turnSummary: document.getElementById('turn-summary'),
@@ -110,12 +139,21 @@ const ui = {
 function setJoinFormLocked(locked) {
   ui.playerNameInput.disabled = locked;
   ui.roomIdInput.disabled = locked;
+  ui.roomPublicInput.disabled = locked;
   ui.joinButton.disabled = locked;
+  renderPublicRooms();
 }
 
-async function joinRoom({ playerName, roomId, playerId = null, reconnect = false }) {
+async function joinRoom({
+  playerName,
+  roomId,
+  playerId = null,
+  reconnect = false,
+  isPublic = undefined,
+  mustExist = false
+}) {
   return new Promise((resolve) => {
-    state.socket.emit('lobby:join', { playerName, roomId, playerId }, (response) => {
+    state.socket.emit('lobby:join', { playerName, roomId, playerId, isPublic, mustExist }, (response) => {
       if (!response?.ok) {
         state.reconnectInFlight = false;
         if (reconnect) {
@@ -134,10 +172,12 @@ async function joinRoom({ playerName, roomId, playerId = null, reconnect = false
       state.session = {
         roomId: response.roomId,
         playerName,
-        playerId: response.playerId
+        playerId: response.playerId,
+        isPublic: Boolean(response.isPublic)
       };
 
       setJoinFormLocked(true);
+      renderPublicRooms();
 
       if (reconnect) {
         setStatus(`Reconnected to room ${response.roomId}.`, 'success');
@@ -182,6 +222,105 @@ function setStatus(message, tone = 'info') {
     ui.statusLine.style.borderColor = '#d5c5a3';
     ui.statusLine.style.color = '#3b4252';
   }
+}
+
+function normalizePublicRoomList(rooms) {
+  if (!Array.isArray(rooms)) {
+    return [];
+  }
+
+  return rooms
+    .filter((entry) => entry && typeof entry.roomId === 'string')
+    .map((entry) => ({
+      roomId: entry.roomId,
+      hostName: typeof entry.hostName === 'string' ? entry.hostName : 'Host',
+      playersCount: Number(entry.playersCount ?? 0),
+      maxPlayers: Number(entry.maxPlayers ?? 0)
+    }));
+}
+
+function joinPublicRoom(roomId) {
+  if (state.joined) {
+    setStatus('Already connected to a room in this tab.', 'info');
+    return;
+  }
+
+  const playerName = ui.playerNameInput.value.trim();
+  if (!playerName) {
+    setStatus('Enter your name before joining a listed room.', 'error');
+    ui.playerNameInput.focus();
+    return;
+  }
+
+  ui.roomIdInput.value = roomId;
+  void joinRoom({ playerName, roomId, mustExist: true });
+}
+
+function renderPublicRooms() {
+  ui.publicRoomsList.innerHTML = '';
+
+  if (!state.publicRooms.length) {
+    const empty = document.createElement('li');
+    empty.className = 'rooms-empty';
+    empty.textContent = 'No public waiting rooms right now.';
+    ui.publicRoomsList.appendChild(empty);
+    return;
+  }
+
+  for (const room of state.publicRooms) {
+    const item = document.createElement('li');
+    item.className = 'public-room-item';
+    item.setAttribute('data-room-id', room.roomId);
+
+    const summary = document.createElement('div');
+    summary.className = 'public-room-summary';
+
+    const code = document.createElement('strong');
+    code.textContent = room.roomId;
+
+    const meta = document.createElement('span');
+    meta.className = 'public-room-meta';
+    meta.textContent = `${room.playersCount}/${room.maxPlayers} players | Host: ${room.hostName}`;
+
+    summary.append(code, meta);
+
+    const joinButton = document.createElement('button');
+    joinButton.type = 'button';
+    joinButton.className = 'secondary';
+    joinButton.textContent = 'Join';
+    joinButton.setAttribute('data-room-id', room.roomId);
+    joinButton.disabled = state.joined;
+    joinButton.addEventListener('click', () => {
+      joinPublicRoom(room.roomId);
+    });
+
+    item.append(summary, joinButton);
+    ui.publicRoomsList.appendChild(item);
+  }
+}
+
+async function refreshPublicRooms() {
+  try {
+    const response = await fetch('/api/rooms/public', { cache: 'no-store' });
+    if (!response.ok) {
+      return;
+    }
+    const payload = await response.json();
+    state.publicRooms = normalizePublicRoomList(payload?.rooms);
+    renderPublicRooms();
+  } catch {
+    // Ignore list polling failures; socket updates can still refresh this panel.
+  }
+}
+
+function seedJoinFormFromAutoJoin() {
+  if (!state.autoJoinConfig) {
+    return;
+  }
+
+  ui.playerNameInput.value = state.autoJoinConfig.playerName;
+  ui.roomIdInput.value = state.autoJoinConfig.roomId;
+  ui.roomPublicInput.checked = state.autoJoinConfig.isPublic;
 }
 
 function toTitleCase(text) {
@@ -753,6 +892,8 @@ function setupSocket() {
   state.socket = io();
 
   state.socket.on('connect', () => {
+    void refreshPublicRooms();
+
     if (state.pendingReconnect && state.session && !state.reconnectInFlight) {
       state.reconnectInFlight = true;
       setStatus(`Reconnecting to room ${state.session.roomId}...`, 'info');
@@ -765,6 +906,17 @@ function setupSocket() {
       return;
     }
 
+    if (state.autoJoinConfig && !state.autoJoinAttempted && !state.joined) {
+      state.autoJoinAttempted = true;
+      setStatus(`Auto-joining room ${state.autoJoinConfig.roomId}...`, 'info');
+      void joinRoom({
+        playerName: state.autoJoinConfig.playerName,
+        roomId: state.autoJoinConfig.roomId,
+        isPublic: state.autoJoinConfig.isPublic
+      });
+      return;
+    }
+
     setStatus('Connected to BRisk server.', 'success');
   });
 
@@ -773,6 +925,11 @@ function setupSocket() {
       state.pendingReconnect = true;
     }
     setStatus('Disconnected from server. Reconnecting...', 'error');
+  });
+
+  state.socket.on('rooms:public', (rooms) => {
+    state.publicRooms = normalizePublicRoomList(rooms);
+    renderPublicRooms();
   });
 
   state.socket.on('app:error', (payload) => {
@@ -797,6 +954,24 @@ function setupSocket() {
       } else {
         setStatus(`Room ${snapshot.roomId} ready. Waiting for host to start.`, 'success');
       }
+
+      if (
+        state.autoJoinConfig?.autoHostStart &&
+        !state.autoHostStartTriggered &&
+        isHost &&
+        playerCount >= 3
+      ) {
+        state.autoHostStartTriggered = true;
+        state.socket.emit('game:start', {}, (response) => {
+          if (!response?.ok) {
+            state.autoHostStartTriggered = false;
+            setStatus(response?.error ?? 'Auto-start failed.', 'error');
+            return;
+          }
+          setStatus('Game auto-started.', 'success');
+          clearSelection();
+        });
+      }
     } else if (snapshot.status === 'IN_PROGRESS') {
       const me = snapshot.players.find((player) => player.id === snapshot.youPlayerId);
       const turnText = snapshot.game.currentPlayerId === snapshot.youPlayerId ? 'Your turn.' : 'Opponent turn.';
@@ -816,13 +991,18 @@ function setupActions() {
 
     const playerName = ui.playerNameInput.value.trim();
     const roomId = ui.roomIdInput.value.trim().toUpperCase();
+    const isPublic = ui.roomPublicInput.checked;
 
     if (!playerName || !roomId) {
       setStatus('Please provide player name and room code.', 'error');
       return;
     }
 
-    void joinRoom({ playerName, roomId });
+    void joinRoom({ playerName, roomId, isPublic });
+  });
+
+  ui.roomsRefreshButton.addEventListener('click', () => {
+    void refreshPublicRooms();
   });
 
   ui.startButton.addEventListener('click', () => {
@@ -897,6 +1077,13 @@ function setupActions() {
 }
 
 async function bootstrap() {
+  seedJoinFormFromAutoJoin();
+  renderPublicRooms();
+  await refreshPublicRooms();
+  setInterval(() => {
+    void refreshPublicRooms();
+  }, 12000);
+
   await setupMap();
   setupSocket();
   setupActions();

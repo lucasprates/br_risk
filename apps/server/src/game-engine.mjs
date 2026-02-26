@@ -681,6 +681,7 @@ function buildSnapshotTemplate(room, lastActionResult = null) {
       baseSnapshot: {
         roomId: room.id,
         status: room.status,
+        isPublic: room.isPublic,
         hostPlayerId: room.hostPlayerId,
         players: room.players.map((player) => ({
           id: player.id,
@@ -703,6 +704,7 @@ function buildSnapshotTemplate(room, lastActionResult = null) {
     baseSnapshot: {
       roomId: room.id,
       status: room.status,
+      isPublic: room.isPublic,
       hostPlayerId: room.hostPlayerId,
       players,
       map: {
@@ -803,12 +805,39 @@ class BriskEngine {
     };
   }
 
-  createOrJoinRoom({ roomId, playerName, socketId, playerId }) {
+  listPublicLobbyRooms() {
+    this.pruneInactiveRooms();
+
+    const rooms = [];
+    for (const room of this.rooms.values()) {
+      if (room.status !== 'LOBBY' || !room.isPublic) {
+        continue;
+      }
+
+      const host = room.players.find((player) => player.id === room.hostPlayerId);
+      rooms.push({
+        roomId: room.id,
+        hostName: host?.name ?? 'Host',
+        playersCount: room.players.length,
+        maxPlayers: constants.players.max,
+        createdAt: room.createdAt
+      });
+    }
+
+    rooms.sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+    return rooms;
+  }
+
+  createOrJoinRoom({ roomId, playerName, socketId, playerId, isPublic, mustExist }) {
     this.pruneInactiveRooms();
 
     const normalizedRoomId = normalizeRoomId(roomId);
     const normalizedPlayerName = normalizePlayerName(playerName);
     const normalizedPlayerId = typeof playerId === 'string' ? playerId.trim() : '';
+    const normalizedIsPublic =
+      isPublic === true || isPublic === 'true' || isPublic === 1 || isPublic === '1';
+    const normalizedMustExist =
+      mustExist === true || mustExist === 'true' || mustExist === 1 || mustExist === '1';
 
     const socketMembership = this.getSocketRoom(socketId);
     if (socketMembership) {
@@ -824,6 +853,10 @@ class BriskEngine {
 
     const existingRoom = this.rooms.get(normalizedRoomId);
     if (!existingRoom) {
+      if (normalizedMustExist) {
+        throw new Error('Room not found or no longer waiting.');
+      }
+
       const player = {
         id: randomId('player_'),
         name: normalizedPlayerName,
@@ -835,6 +868,7 @@ class BriskEngine {
         id: normalizedRoomId,
         createdAt: new Date().toISOString(),
         status: 'LOBBY',
+        isPublic: normalizedIsPublic,
         hostPlayerId: player.id,
         players: [player],
         game: null,

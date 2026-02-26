@@ -64,6 +64,69 @@ test('reconnects an existing player into in-progress room', () => {
   );
 });
 
+test('lists only public lobby rooms and hides started rooms', () => {
+  const engine = new BriskEngine();
+
+  engine.createOrJoinRoom({
+    roomId: 'PUB001',
+    playerName: 'Alice',
+    socketId: 'pub001_s1',
+    isPublic: true
+  });
+  engine.createOrJoinRoom({
+    roomId: 'PUB001',
+    playerName: 'Bruno',
+    socketId: 'pub001_s2'
+  });
+
+  engine.createOrJoinRoom({
+    roomId: 'PRIV01',
+    playerName: 'Carla',
+    socketId: 'priv01_s1',
+    isPublic: false
+  });
+
+  const hostStarted = engine.createOrJoinRoom({
+    roomId: 'PUB002',
+    playerName: 'Diana',
+    socketId: 'pub002_s1',
+    isPublic: true
+  });
+  engine.createOrJoinRoom({
+    roomId: 'PUB002',
+    playerName: 'Edu',
+    socketId: 'pub002_s2'
+  });
+  engine.createOrJoinRoom({
+    roomId: 'PUB002',
+    playerName: 'Fernanda',
+    socketId: 'pub002_s3'
+  });
+  engine.startGame({ roomId: 'PUB002', playerId: hostStarted.player.id });
+
+  const rooms = engine.listPublicLobbyRooms();
+  assert.equal(rooms.length, 1);
+  assert.equal(rooms[0].roomId, 'PUB001');
+  assert.equal(rooms[0].hostName, 'Alice');
+  assert.equal(rooms[0].playersCount, 2);
+});
+
+test('mustExist prevents stale one-click join from creating a new room', () => {
+  const engine = new BriskEngine();
+
+  assert.throws(
+    () =>
+      engine.createOrJoinRoom({
+        roomId: 'MISS01',
+        playerName: 'Alice',
+        socketId: 'miss_s1',
+        mustExist: true
+      }),
+    /Room not found or no longer waiting\./
+  );
+  assert.equal(engine.getRoom('MISS01'), undefined);
+});
+
 test('increments round on wrap even if first player in order was eliminated', () => {
   const engine = new BriskEngine();
   const roomId = 'TROUND';

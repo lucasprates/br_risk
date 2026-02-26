@@ -29,6 +29,18 @@ app.get('/api/ruleset/classic', (_req, res) => {
   res.json(engine.getRuleset());
 });
 
+app.get('/api/rooms/public', (_req, res) => {
+  res.json({ rooms: engine.listPublicLobbyRooms() });
+});
+
+app.get('/AutoStart', (_req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, 'autostart.html'));
+});
+
+app.get('/autostart', (_req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, 'autostart.html'));
+});
+
 app.get(/.*/, (_req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
@@ -71,14 +83,22 @@ function withAck(ack, payload) {
   }
 }
 
+function emitPublicRooms() {
+  io.emit('rooms:public', engine.listPublicLobbyRooms());
+}
+
 io.on('connection', (socket) => {
+  socket.emit('rooms:public', engine.listPublicLobbyRooms());
+
   socket.on('lobby:join', (payload, ack) => {
     try {
       const { room, player } = engine.createOrJoinRoom({
         roomId: payload?.roomId,
         playerName: payload?.playerName,
         playerId: payload?.playerId,
-        socketId: socket.id
+        socketId: socket.id,
+        isPublic: payload?.isPublic,
+        mustExist: payload?.mustExist
       });
 
       socket.data.roomId = room.id;
@@ -86,12 +106,14 @@ io.on('connection', (socket) => {
       socket.join(room.id);
 
       emitRoomState(room.id);
+      emitPublicRooms();
 
       withAck(ack, {
         ok: true,
         roomId: room.id,
         playerId: player.id,
-        hostPlayerId: room.hostPlayerId
+        hostPlayerId: room.hostPlayerId,
+        isPublic: room.isPublic
       });
     } catch (error) {
       withAck(ack, {
@@ -114,6 +136,7 @@ io.on('connection', (socket) => {
 
       const room = engine.startGame({ roomId, playerId });
       emitRoomState(room.id);
+      emitPublicRooms();
 
       withAck(ack, { ok: true });
     } catch (error) {
@@ -153,6 +176,7 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     const result = engine.removeSocket(socket.id);
+    emitPublicRooms();
     if (!result.room || result.roomDeleted) {
       return;
     }

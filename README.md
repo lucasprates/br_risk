@@ -11,11 +11,15 @@ npm start
 
 Open: `http://localhost:3000`
 
+Quick start page (opens 3 generic players in one room): `http://localhost:3000/AutoStart`
+
 Note: one browser tab equals one player. To add more players locally, open additional tabs/windows.
 
 ## Current gameplay (v0)
 
 - Multiplayer room lobby (`3-6` players)
+- Optional public room visibility when creating a lobby
+- Open public waiting-room list with one-click join
 - Host starts match
 - 42-territory board with visible 2D territories + curved adjacency connections
 - Turn phases:

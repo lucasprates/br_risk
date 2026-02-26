@@ -23,6 +23,10 @@
             Room
             <input id="room-id" maxlength="12" required placeholder="BRISK01" />
           </label>
+          <label class="checkbox-label">
+            <input id="room-public" type="checkbox" />
+            Public/Visible
+          </label>
           <button id="join-button" type="submit">Join Room</button>
           <button id="start-button" type="button" class="secondary" disabled>Start Game</button>
         </form>
@@ -36,6 +40,14 @@
         </section>
 
         <aside class="sidebar">
+          <section class="panel">
+            <div class="panel-title-row">
+              <h2>Open Public Rooms</h2>
+              <button id="rooms-refresh-button" type="button" class="secondary mini">Refresh</button>
+            </div>
+            <ul id="public-rooms-list" class="public-rooms-list"></ul>
+          </section>
+
           <section class="panel">
             <h2>Turn</h2>
             <p id="turn-summary">Waiting for lobby.</p>

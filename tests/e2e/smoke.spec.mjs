@@ -45,3 +45,34 @@ test('three players can join lobby and host starts the game', async ({ browser, 
     await contextThree.close();
   }
 });
+
+test('public lobby appears in room list and can be joined in one click', async ({ browser, page }) => {
+  const roomId = buildRoomCode();
+
+  const contextTwo = await browser.newContext();
+  const pageTwo = await contextTwo.newPage();
+
+  try {
+    await page.goto('/');
+    await expect(page.locator('#board')).toBeVisible();
+    await page.locator('#player-name').fill('Alice');
+    await page.locator('#room-id').fill(roomId);
+    await page.locator('#room-public').check();
+    await page.locator('#join-button').click();
+
+    await expect(page.locator('#status-line')).toContainText(`room ${roomId}`);
+
+    await pageTwo.goto('/');
+    await expect(pageTwo.locator('#board')).toBeVisible();
+    await pageTwo.locator('#player-name').fill('Bruno');
+
+    const roomCard = pageTwo.locator(`li.public-room-item[data-room-id="${roomId}"]`).first();
+    await expect(roomCard).toBeVisible();
+    await roomCard.locator('button[data-room-id]').click();
+
+    await expect(pageTwo.locator('#join-button')).toBeDisabled();
+    await expect(pageTwo.locator('#status-line')).toContainText(`room ${roomId}`);
+  } finally {
+    await contextTwo.close();
+  }
+});

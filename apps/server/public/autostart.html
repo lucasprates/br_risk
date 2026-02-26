@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BRisk AutoStart</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f3ea;
+        --panel: #fff9ee;
+        --ink: #1f2a37;
+        --line: #d9c7a0;
+        --accent: #0e7490;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Gill Sans", "Trebuchet MS", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 14% 8%, rgba(14, 116, 144, 0.16), transparent 34%),
+          linear-gradient(140deg, #f9f3e8, var(--bg));
+        display: grid;
+        place-items: center;
+        padding: 1rem;
+      }
+
+      main {
+        width: min(620px, 100%);
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 1rem 1.1rem;
+      }
+
+      h1 {
+        margin: 0 0 0.35rem;
+      }
+
+      p {
+        margin: 0.35rem 0;
+        line-height: 1.4;
+      }
+
+      button {
+        margin-top: 0.75rem;
+        border: none;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #f7fcff;
+        padding: 0.58rem 0.95rem;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      #status {
+        margin-top: 0.65rem;
+        font-size: 0.95rem;
+      }
+
+      code {
+        background: rgba(31, 42, 55, 0.08);
+        border-radius: 6px;
+        padding: 0.1rem 0.3rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>BRisk AutoStart</h1>
+      <p>
+        Opens 3 player windows in the same room using generic names and auto-starts the match as soon as the lobby has
+        all 3 players.
+      </p>
+      <p>Room code is generated automatically and kept private by default.</p>
+      <button id="launch" type="button">Start 3-Player Session</button>
+      <p id="status">Ready.</p>
+      <p>If your browser blocks popups, allow popups for <code>localhost</code> and click again.</p>
+    </main>
+
+    <script>
+      function randomRoomId() {
+        const token = Math.random().toString(36).slice(2, 8).toUpperCase();
+        return `AUTO${token}`;
+      }
+
+      function buildPlayerUrl(roomId, playerName, autoHostStart) {
+        const params = new URLSearchParams({
+          autoJoin: '1',
+          roomId,
+          playerName,
+          publicRoom: '0',
+          autoHostStart: autoHostStart ? '1' : '0'
+        });
+        return `/?${params.toString()}`;
+      }
+
+      function updateStatus(message) {
+        const status = document.getElementById('status');
+        status.textContent = message;
+      }
+
+      function launchAutoStart() {
+        const roomId = randomRoomId();
+        const playerUrls = [
+          buildPlayerUrl(roomId, 'Player One', true),
+          buildPlayerUrl(roomId, 'Player Two', false),
+          buildPlayerUrl(roomId, 'Player Three', false)
+        ];
+
+        const openedTwo = window.open(playerUrls[1], '_blank');
+        const openedThree = window.open(playerUrls[2], '_blank');
+        const popupBlocked = !openedTwo || !openedThree;
+
+        if (popupBlocked) {
+          updateStatus(`Room ${roomId}. Popup blocked: allow popups, then click again.`);
+          return;
+        }
+
+        updateStatus(`Room ${roomId} created. Redirecting host window...`);
+        window.location.assign(playerUrls[0]);
+      }
+
+      document.getElementById('launch').addEventListener('click', launchAutoStart);
+    </script>
+  </body>
+</html>
