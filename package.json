@@ -1,13 +1,15 @@
 {
   "name": "brisk",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node apps/server/src/server.mjs",
     "dev": "node apps/server/src/server.mjs",
     "validate:ruleset": "node scripts/validate-ruleset.mjs",
-    "test": "node --test tests/game-engine.test.mjs"
+    "test": "node --test tests/game-engine.test.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "express": "^5.2.1",
@@ -18,5 +20,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/lucasprates/BRisk.git"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
   }
 }
