@@ -22,7 +22,7 @@ app.use(express.static(PUBLIC_DIR));
 app.use('/rulesets', express.static(RULESETS_DIR));
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'brisk-server' });
+  res.json({ ok: true, service: 'BRisk-server' });
 });
 
 app.get('/api/ruleset/classic', (_req, res) => {
@@ -39,13 +39,23 @@ function emitRoomState(roomId, actionResult = null) {
     return;
   }
 
+  let snapshots = null;
+  try {
+    snapshots = engine.snapshotsByPlayer(roomId, actionResult);
+  } catch {
+    return;
+  }
+
   for (const player of room.players) {
     if (!player.socketId || !player.connected) {
       continue;
     }
 
     try {
-      const snapshot = engine.snapshot(roomId, player.id, actionResult);
+      const snapshot = snapshots.get(player.id);
+      if (!snapshot) {
+        continue;
+      }
       io.to(player.socketId).emit('state:update', snapshot);
     } catch (error) {
       io.to(player.socketId).emit('app:error', {
@@ -67,6 +77,7 @@ io.on('connection', (socket) => {
       const { room, player } = engine.createOrJoinRoom({
         roomId: payload?.roomId,
         playerName: payload?.playerName,
+        playerId: payload?.playerId,
         socketId: socket.id
       });
 
@@ -97,6 +108,9 @@ io.on('connection', (socket) => {
       if (!roomId || !playerId) {
         throw new Error('You must join a room first.');
       }
+      if (!engine.isActiveSocketForPlayer({ roomId, playerId, socketId: socket.id })) {
+        throw new Error('This tab is no longer the active session for this player.');
+      }
 
       const room = engine.startGame({ roomId, playerId });
       emitRoomState(room.id);
@@ -116,6 +130,9 @@ io.on('connection', (socket) => {
       const playerId = socket.data.playerId;
       if (!roomId || !playerId) {
         throw new Error('You must join a room first.');
+      }
+      if (!engine.isActiveSocketForPlayer({ roomId, playerId, socketId: socket.id })) {
+        throw new Error('This tab is no longer the active session for this player.');
       }
 
       const { room, actionResult } = engine.applyGameAction({

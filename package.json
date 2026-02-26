@@ -1,15 +1,22 @@
 {
   "name": "brisk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node apps/server/src/server.mjs",
     "dev": "node apps/server/src/server.mjs",
-    "validate:ruleset": "node scripts/validate-ruleset.mjs"
+    "validate:ruleset": "node scripts/validate-ruleset.mjs",
+    "test": "node --test tests/game-engine.test.mjs"
   },
   "dependencies": {
     "express": "^5.2.1",
     "socket.io": "^4.8.3"
+  },
+  "displayName": "BRisk",
+  "description": "BRisk - Brazilian version of Risk game",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lucasprates/BRisk.git"
   }
 }

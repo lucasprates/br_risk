@@ -74,6 +74,9 @@ const state = {
   mapData: null,
   territoryIndex: new Map(),
   joined: false,
+  session: null,
+  pendingReconnect: false,
+  reconnectInFlight: false,
   selection: {
     fromTerritoryId: null,
     toTerritoryId: null
@@ -103,6 +106,49 @@ const ui = {
   playersList: document.getElementById('players-list'),
   logList: document.getElementById('log-list')
 };
+
+function setJoinFormLocked(locked) {
+  ui.playerNameInput.disabled = locked;
+  ui.roomIdInput.disabled = locked;
+  ui.joinButton.disabled = locked;
+}
+
+async function joinRoom({ playerName, roomId, playerId = null, reconnect = false }) {
+  return new Promise((resolve) => {
+    state.socket.emit('lobby:join', { playerName, roomId, playerId }, (response) => {
+      if (!response?.ok) {
+        state.reconnectInFlight = false;
+        if (reconnect) {
+          state.joined = false;
+          state.pendingReconnect = false;
+          setJoinFormLocked(false);
+        }
+        setStatus(response?.error ?? 'Failed to join room.', 'error');
+        resolve(false);
+        return;
+      }
+
+      state.joined = true;
+      state.pendingReconnect = false;
+      state.reconnectInFlight = false;
+      state.session = {
+        roomId: response.roomId,
+        playerName,
+        playerId: response.playerId
+      };
+
+      setJoinFormLocked(true);
+
+      if (reconnect) {
+        setStatus(`Reconnected to room ${response.roomId}.`, 'success');
+      } else {
+        setStatus(`Joined room ${response.roomId}.`, 'success');
+      }
+
+      resolve(true);
+    });
+  });
+}
 
 function hashString(input) {
   let hash = 0;
@@ -291,6 +337,11 @@ function drawBoard() {
   }
 
   const game = getCurrentGame();
+  const layoutByTerritoryId = new Map();
+  for (let index = 0; index < map.territories.length; index += 1) {
+    const territory = map.territories[index];
+    layoutByTerritoryId.set(territory.id, territoryLayout(territory.id, index));
+  }
 
   for (const continent of map.continents ?? []) {
     const overlay = CONTINENT_OVERLAYS[continent.id];
@@ -315,7 +366,10 @@ function drawBoard() {
   const edgeSeen = new Set();
   for (let index = 0; index < map.territories.length; index += 1) {
     const territory = map.territories[index];
-    const fromLayout = territoryLayout(territory.id, index);
+    const fromLayout = layoutByTerritoryId.get(territory.id);
+    if (!fromLayout) {
+      continue;
+    }
 
     for (const neighborId of territory.neighbors) {
       const edgeKey = [territory.id, neighborId].sort().join('::');
@@ -324,8 +378,10 @@ function drawBoard() {
       }
       edgeSeen.add(edgeKey);
 
-      const neighborIndex = map.territories.findIndex((candidate) => candidate.id === neighborId);
-      const toLayout = territoryLayout(neighborId, neighborIndex < 0 ? 0 : neighborIndex);
+      const toLayout = layoutByTerritoryId.get(neighborId);
+      if (!toLayout) {
+        continue;
+      }
 
       const dx = toLayout.x - fromLayout.x;
       const dy = toLayout.y - fromLayout.y;
@@ -351,7 +407,10 @@ function drawBoard() {
 
   for (let index = 0; index < map.territories.length; index += 1) {
     const territory = map.territories[index];
-    const layout = territoryLayout(territory.id, index);
+    const layout = layoutByTerritoryId.get(territory.id);
+    if (!layout) {
+      continue;
+    }
     const territoryState = game?.territories?.[territory.id] ?? null;
     const ownerColor = deriveOwnerColor(territoryState?.ownerId ?? null);
     const fillColor = mixHex(ownerColor, 14);
@@ -694,10 +753,25 @@ function setupSocket() {
   state.socket = io();
 
   state.socket.on('connect', () => {
+    if (state.pendingReconnect && state.session && !state.reconnectInFlight) {
+      state.reconnectInFlight = true;
+      setStatus(`Reconnecting to room ${state.session.roomId}...`, 'info');
+      void joinRoom({
+        playerName: state.session.playerName,
+        roomId: state.session.roomId,
+        playerId: state.session.playerId,
+        reconnect: true
+      });
+      return;
+    }
+
     setStatus('Connected to BRisk server.', 'success');
   });
 
   state.socket.on('disconnect', () => {
+    if (state.joined && state.session) {
+      state.pendingReconnect = true;
+    }
     setStatus('Disconnected from server. Reconnecting...', 'error');
   });
 
@@ -748,18 +822,7 @@ function setupActions() {
       return;
     }
 
-    state.socket.emit('lobby:join', { playerName, roomId }, (response) => {
-      if (!response?.ok) {
-        setStatus(response?.error ?? 'Failed to join room.', 'error');
-        return;
-      }
-
-      state.joined = true;
-      ui.playerNameInput.disabled = true;
-      ui.roomIdInput.disabled = true;
-      ui.joinButton.disabled = true;
-      setStatus(`Joined room ${response.roomId}.`, 'success');
-    });
+    void joinRoom({ playerName, roomId });
   });
 
   ui.startButton.addEventListener('click', () => {

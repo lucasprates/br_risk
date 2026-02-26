@@ -16,6 +16,7 @@ const CONTINENTS_BY_ID = new Map(mapData.continents.map((continent) => [continen
 const OBJECTIVES_BY_ID = new Map(objectivesData.objectives.map((objective) => [objective.id, objective]));
 
 const PLAYER_COLORS = ['RED', 'BLUE', 'GREEN', 'YELLOW', 'BLACK', 'WHITE'];
+const INACTIVE_ROOM_TTL_MS = 15 * 60 * 1000;
 
 function randomId(prefix = '') {
   return `${prefix}${crypto.randomBytes(4).toString('hex')}`;
@@ -328,6 +329,7 @@ function buildInitialGame(players) {
   }));
 
   const playersWithObjectives = assignObjectives(shuffledPlayers);
+  const turnOrderPlayers = shuffle(playersWithObjectives);
   const territories = {};
   for (const territory of mapData.territories) {
     territories[territory.id] = { ownerId: '', armies: 0 };
@@ -336,20 +338,20 @@ function buildInitialGame(players) {
   const shuffledTerritoryIds = shuffle(mapData.territories.map((territory) => territory.id));
   for (let index = 0; index < shuffledTerritoryIds.length; index += 1) {
     const territoryId = shuffledTerritoryIds[index];
-    const owner = playersWithObjectives[index % playersWithObjectives.length];
+    const owner = turnOrderPlayers[index % turnOrderPlayers.length];
     territories[territoryId] = {
       ownerId: owner.id,
       armies: 1
     };
   }
 
-  const firstPlayer = playersWithObjectives[0];
+  const firstPlayer = turnOrderPlayers[0];
   const game = {
     id: randomId('game_'),
     status: 'IN_PROGRESS',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    players: playersWithObjectives,
+    players: turnOrderPlayers,
     territories,
     turn: {
       round: 1,
@@ -593,7 +595,13 @@ function endTurn(game, playerId) {
     throw new Error('No next player available.');
   }
 
-  if (nextPlayer.id === game.players[0].id) {
+  const currentIndex = indexOfPlayer(game, player.id);
+  const nextIndex = indexOfPlayer(game, nextPlayer.id);
+  if (currentIndex < 0 || nextIndex < 0) {
+    throw new Error('Turn order is inconsistent.');
+  }
+
+  if (nextIndex <= currentIndex) {
     game.turn.round += 1;
   }
 
@@ -636,7 +644,8 @@ function applyAction(game, playerId, action) {
   };
 }
 
-function buildPublicPlayerView(room, game, viewerPlayerId) {
+function buildPublicPlayerViewBase(room, game) {
+  const roomPlayerById = new Map(room.players.map((player) => [player.id, player]));
   const territoryCountByPlayer = new Map(game.players.map((player) => [player.id, 0]));
   for (const territoryState of Object.values(game.territories)) {
     territoryCountByPlayer.set(
@@ -645,74 +654,133 @@ function buildPublicPlayerView(room, game, viewerPlayerId) {
     );
   }
 
-  return game.players.map((player) => {
+  const objectiveTextByPlayerId = new Map();
+  const players = game.players.map((player) => {
     const objective = OBJECTIVES_BY_ID.get(player.objectiveId);
+    objectiveTextByPlayerId.set(player.id, objective?.textPt ?? '');
 
     return {
       id: player.id,
       name: player.name,
       color: player.color,
-      connected: room.players.find((entry) => entry.id === player.id)?.connected ?? false,
+      connected: roomPlayerById.get(player.id)?.connected ?? false,
       alive: player.alive,
       reserveArmies: player.reserveArmies,
       territoryCount: territoryCountByPlayer.get(player.id) ?? 0,
       isCurrentTurn: game.turn.currentPlayerId === player.id,
-      objectiveText: player.id === viewerPlayerId ? objective?.textPt ?? '' : null
+      objectiveText: null
     };
   });
+
+  return { players, objectiveTextByPlayerId };
 }
 
-function snapshotForPlayer(room, viewerPlayerId, lastActionResult = null) {
+function buildSnapshotTemplate(room, lastActionResult = null) {
   if (room.status === 'LOBBY') {
     return {
-      roomId: room.id,
-      status: room.status,
-      hostPlayerId: room.hostPlayerId,
-      youPlayerId: viewerPlayerId,
-      players: room.players.map((player) => ({
-        id: player.id,
-        name: player.name,
-        connected: player.connected
-      })),
-      map: {
-        rulesetId: mapData.rulesetId,
-        territories: mapData.territories
-      }
+      baseSnapshot: {
+        roomId: room.id,
+        status: room.status,
+        hostPlayerId: room.hostPlayerId,
+        players: room.players.map((player) => ({
+          id: player.id,
+          name: player.name,
+          connected: player.connected
+        })),
+        map: {
+          rulesetId: mapData.rulesetId,
+          territories: mapData.territories
+        }
+      },
+      objectiveTextByPlayerId: null
     };
   }
 
   const game = room.game;
+  const { players, objectiveTextByPlayerId } = buildPublicPlayerViewBase(room, game);
+
   return {
-    roomId: room.id,
-    status: room.status,
-    hostPlayerId: room.hostPlayerId,
-    youPlayerId: viewerPlayerId,
-    players: buildPublicPlayerView(room, game, viewerPlayerId),
-    map: {
-      rulesetId: mapData.rulesetId,
-      territories: mapData.territories,
-      continents: mapData.continents
+    baseSnapshot: {
+      roomId: room.id,
+      status: room.status,
+      hostPlayerId: room.hostPlayerId,
+      players,
+      map: {
+        rulesetId: mapData.rulesetId,
+        territories: mapData.territories,
+        continents: mapData.continents
+      },
+      game: {
+        id: game.id,
+        status: game.status,
+        round: game.turn.round,
+        phase: game.turn.phase,
+        currentPlayerId: game.turn.currentPlayerId,
+        winnerPlayerId: game.winnerPlayerId,
+        territories: clone(game.territories),
+        logs: clone(game.logs),
+        lastActionResult
+      }
     },
-    game: {
-      id: game.id,
-      status: game.status,
-      round: game.turn.round,
-      phase: game.turn.phase,
-      currentPlayerId: game.turn.currentPlayerId,
-      winnerPlayerId: game.winnerPlayerId,
-      territories: clone(game.territories),
-      logs: clone(game.logs),
-      lastActionResult
+    objectiveTextByPlayerId
+  };
+}
+
+function snapshotForPlayerFromTemplate(baseSnapshot, objectiveTextByPlayerId, viewerPlayerId) {
+  if (baseSnapshot.status === 'LOBBY') {
+    return {
+      ...baseSnapshot,
+      youPlayerId: viewerPlayerId
+    };
+  }
+
+  const viewerObjectiveText = objectiveTextByPlayerId?.get(viewerPlayerId) ?? '';
+  const players = baseSnapshot.players.map((player) => {
+    if (player.id !== viewerPlayerId) {
+      return player;
     }
+    return {
+      ...player,
+      objectiveText: viewerObjectiveText
+    };
+  });
+
+  return {
+    ...baseSnapshot,
+    youPlayerId: viewerPlayerId,
+    players
   };
 }
 
 class BriskEngine {
-  constructor() {
+  constructor(options = {}) {
     this.rooms = new Map();
+    const candidateTtl = Number(options.inactiveRoomTtlMs);
+    this.inactiveRoomTtlMs =
+      Number.isFinite(candidateTtl) && candidateTtl > 0 ? Math.floor(candidateTtl) : INACTIVE_ROOM_TTL_MS;
+  }
+
+  pruneInactiveRooms(nowMs = Date.now()) {
+    for (const [roomId, room] of this.rooms.entries()) {
+      if (room.status === 'LOBBY') {
+        continue;
+      }
+      if (!Number.isFinite(room.inactiveSince)) {
+        continue;
+      }
+      if (nowMs - room.inactiveSince >= this.inactiveRoomTtlMs) {
+        this.rooms.delete(roomId);
+      }
+    }
+  }
+
+  roomFullyDisconnected(room) {
+    return room.players.every((player) => !player.connected || !player.socketId);
   }
 
   getSocketRoom(socketId) {
+    this.pruneInactiveRooms();
+
     for (const room of this.rooms.values()) {
       const player = room.players.find((entry) => entry.socketId === socketId && entry.connected);
       if (player) {
@@ -723,6 +791,7 @@ class BriskEngine {
   }
 
   getRoom(roomId) {
+    this.pruneInactiveRooms();
     return this.rooms.get(roomId);
   }
 
@@ -734,9 +803,12 @@ class BriskEngine {
     };
   }
 
-  createOrJoinRoom({ roomId, playerName, socketId }) {
+  createOrJoinRoom({ roomId, playerName, socketId, playerId }) {
+    this.pruneInactiveRooms();
+
     const normalizedRoomId = normalizeRoomId(roomId);
     const normalizedPlayerName = normalizePlayerName(playerName);
+    const normalizedPlayerId = typeof playerId === 'string' ? playerId.trim() : '';
 
     const socketMembership = this.getSocketRoom(socketId);
     if (socketMembership) {
@@ -765,7 +837,8 @@ class BriskEngine {
         status: 'LOBBY',
         hostPlayerId: player.id,
         players: [player],
-        game: null
+        game: null,
+        inactiveSince: null
       };
 
       this.rooms.set(normalizedRoomId, newRoom);
@@ -778,7 +851,44 @@ class BriskEngine {
     }
 
     if (existingRoom.status !== 'LOBBY') {
-      throw new Error('Game already started in this room.');
+      let reconnectPlayer = null;
+
+      if (normalizedPlayerId) {
+        reconnectPlayer = existingRoom.players.find((player) => player.id === normalizedPlayerId) ?? null;
+        if (reconnectPlayer && reconnectPlayer.name.toLowerCase() !== normalizedPlayerName.toLowerCase()) {
+          throw new Error('Player identity does not match this room.');
+        }
+      }
+
+      if (!reconnectPlayer) {
+        reconnectPlayer = existingRoom.players.find(
+          (player) => player.name.toLowerCase() === normalizedPlayerName.toLowerCase()
+        ) ?? null;
+      }
+
+      if (!reconnectPlayer) {
+        throw new Error('Game already started in this room.');
+      }
+
+      if (
+        reconnectPlayer.connected &&
+        reconnectPlayer.socketId &&
+        reconnectPlayer.socketId !== socketId &&
+        reconnectPlayer.id !== normalizedPlayerId
+      ) {
+        throw new Error('This player is already connected from another tab.');
+      }
+
+      reconnectPlayer.connected = true;
+      reconnectPlayer.socketId = socketId;
+      existingRoom.inactiveSince = null;
+
+      return {
+        room: existingRoom,
+        player: reconnectPlayer,
+        created: false,
+        reconnected: true
+      };
     }
 
     if (existingRoom.players.length >= constants.players.max) {
@@ -800,6 +910,7 @@ class BriskEngine {
     };
 
     existingRoom.players.push(player);
+    existingRoom.inactiveSince = null;
 
     return {
       room: existingRoom,
@@ -809,6 +920,8 @@ class BriskEngine {
   }
 
   removeSocket(socketId) {
+    this.pruneInactiveRooms();
+
     for (const room of this.rooms.values()) {
       const player = room.players.find((entry) => entry.socketId === socketId);
       if (!player) {
@@ -832,6 +945,18 @@ class BriskEngine {
 
       player.connected = false;
       player.socketId = null;
+
+      if (!this.roomFullyDisconnected(room)) {
+        room.inactiveSince = null;
+        return { room, roomDeleted: false };
+      }
+
+      if (room.status === 'FINISHED') {
+        this.rooms.delete(room.id);
+        return { room: null, roomDeleted: true };
+      }
+
+      room.inactiveSince = room.inactiveSince ?? Date.now();
       return { room, roomDeleted: false };
     }
 
@@ -839,6 +964,8 @@ class BriskEngine {
   }
 
   startGame({ roomId, playerId }) {
+    this.pruneInactiveRooms();
+
     const room = this.rooms.get(roomId);
     if (!room) {
       throw new Error('Room not found.');
@@ -858,6 +985,7 @@ class BriskEngine {
 
     room.game = buildInitialGame(room.players);
     room.status = 'IN_PROGRESS';
+    room.inactiveSince = null;
 
     for (const gamePlayer of room.game.players) {
       const lobbyPlayer = room.players.find((entry) => entry.id === gamePlayer.id);
@@ -872,6 +1000,8 @@ class BriskEngine {
   }
 
   applyGameAction({ roomId, playerId, action }) {
+    this.pruneInactiveRooms();
+
     const room = this.rooms.get(roomId);
     if (!room || room.status === 'LOBBY' || !room.game) {
       throw new Error('Game room not found or not started.');
@@ -889,13 +1019,53 @@ class BriskEngine {
     };
   }
 
+  isActiveSocketForPlayer({ roomId, playerId, socketId }) {
+    this.pruneInactiveRooms();
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      return false;
+    }
+
+    const player = room.players.find((entry) => entry.id === playerId);
+    if (!player) {
+      return false;
+    }
+
+    return player.connected && player.socketId === socketId;
+  }
+
   snapshot(roomId, viewerPlayerId, actionResult = null) {
+    this.pruneInactiveRooms();
+
     const room = this.rooms.get(roomId);
     if (!room) {
       throw new Error('Room not found.');
     }
 
-    return snapshotForPlayer(room, viewerPlayerId, actionResult);
+    const { baseSnapshot, objectiveTextByPlayerId } = buildSnapshotTemplate(room, actionResult);
+    return snapshotForPlayerFromTemplate(baseSnapshot, objectiveTextByPlayerId, viewerPlayerId);
+  }
+
+  snapshotsByPlayer(roomId, actionResult = null) {
+    this.pruneInactiveRooms();
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      throw new Error('Room not found.');
+    }
+
+    const { baseSnapshot, objectiveTextByPlayerId } = buildSnapshotTemplate(room, actionResult);
+    const snapshots = new Map();
+
+    for (const player of room.players) {
+      snapshots.set(
+        player.id,
+        snapshotForPlayerFromTemplate(baseSnapshot, objectiveTextByPlayerId, player.id)
+      );
+    }
+
+    return snapshots;
   }
 }
 
